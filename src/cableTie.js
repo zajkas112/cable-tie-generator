@@ -1,5 +1,4 @@
-// Parametric Reusable Cable Tie – Replicad version
-
+// src/cableTie.js
 export function makeCableTie({
   strapLength = 180,
   strapWidth = 4.8,
@@ -14,74 +13,77 @@ export function makeCableTie({
 } = {}) {
   const { draw, makeBaseBox } = self.replicad;
 
-  // 1. Strap
+  const tabLength = 12;
+  const leadIn = 8;
+  const gapBeforeHead = 4;
+
+  // Pánt: x = 0 … strapLength. A fej ezután kezdődik.
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
-    .translate([-strapLength / 2, 0, strapThickness / 2]);
+    .translate([strapLength / 2, 0, strapThickness / 2]);
 
-  // 2. Teeth
+  const tab = makeBaseBox(tabLength, strapWidth + 1.6, strapThickness)
+    .translate([-tabLength / 2, 0, strapThickness / 2]);
+  strap = strap.fuse(tab);
+
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
-    const usableLength = strapLength - 28;
-    const numTeeth = Math.floor(usableLength / toothPitch);
+    const teethStart = leadIn;
+    const teethEnd = strapLength - gapBeforeHead;
+    const toothLen = Math.max(0.45, toothPitch * 0.42);
+    const toothWidth = Math.max(1.2, strapWidth - 0.8);
+    const count = Math.floor((teethEnd - teethStart) / toothPitch);
 
-    for (let i = 0; i < numTeeth; i++) {
-      const x = -strapLength / 2 + 18 + i * toothPitch;
+    for (let i = 0; i < count; i++) {
+      const x = teethStart + i * toothPitch;
+      if (x + toothLen > teethEnd) break;
 
-      const tooth = draw()
-        .hLine(toothPitch * 0.55)
-        .line(-toothPitch * 0.27, toothDepth)
-        .line(-toothPitch * 0.28, -toothDepth)
+      const tooth = draw([0, 0])
+        .lineTo(toothLen, 0)
+        .lineTo(toothLen * 0.7, toothDepth)
         .close()
         .sketchOnPlane("XY")
-        .extrude(strapWidth - 0.6)
-        .translate([x, -(strapWidth - 0.6) / 2, strapThickness]);
+        .extrude(toothWidth)
+        .translate([x, -toothWidth / 2, strapThickness]);
 
       strap = strap.fuse(tooth);
     }
   }
 
-  // 3. Pull tab
-  const tab = makeBaseBox(12, strapWidth + 1.6, strapThickness)
-    .translate([-strapLength / 2 - 6, 0, strapThickness / 2]);
-  strap = strap.fuse(tab);
+  const headX = strapLength;
+  let head = makeBaseBox(headLength, headWidth, headHeight).translate([
+    headX + headLength / 2,
+    0,
+    strapThickness / 2,
+  ]);
 
-  // 4. Head / Buckle
-  let head = makeBaseBox(headLength, headWidth, headHeight)
-    .translate([headLength / 2, 0, headHeight / 2 - (headHeight - strapThickness) / 2]);
-
-  // Insertion slot
   const slotW = strapWidth + clearance * 2;
-  const slotH = strapThickness + clearance * 2 + toothDepth + 0.5;
-  const slot = makeBaseBox(headLength + 4, slotW, slotH)
-    .translate([headLength / 2, 0, strapThickness / 2]);
+  const slotH = strapThickness + toothDepth + clearance * 2 + 0.3;
+  const slot = makeBaseBox(headLength + 0.4, slotW, slotH).translate([
+    headX + headLength / 2,
+    0,
+    strapThickness / 2 + 0.1,
+  ]);
   head = head.cut(slot);
 
-  // Side relief
-  const sideRelief = makeBaseBox(5, headWidth + 2, 3.8)
-    .translate([5.5, 0, 3.2]);
-  head = head.cut(sideRelief);
+  const leverX = headX + 2.2;
+  let lever = makeBaseBox(6.2, strapWidth - 0.5, 1.3).translate([
+    leverX + 3.1,
+    0,
+    strapThickness + toothDepth + clearance + 0.7,
+  ]);
 
-  // 5. Lever + locking tooth
-  let lever = makeBaseBox(7.2, strapWidth - 0.5, 1.5)
-    .translate([5.5, 0, 2.6]);
-
-  const lockTooth = makeBaseBox(1.9, strapWidth - 0.9, 1.7)
-    .translate([4.8, 0, 1.2]);
+  const lockTooth = makeBaseBox(1.5, strapWidth - 1.1, toothDepth + 0.35).translate([
+    leverX + 1.1,
+    0,
+    strapThickness + clearance,
+  ]);
   lever = lever.fuse(lockTooth);
 
-  const hinge = makeBaseBox(1.4, strapWidth - 0.7, 0.55)
-    .translate([9.5, 0, 2.9]);
+  const hinge = makeBaseBox(1.1, strapWidth - 0.7, 0.4).translate([
+    headX + headLength - 1.8,
+    0,
+    strapThickness + toothDepth + clearance + 0.85,
+  ]);
   lever = lever.fuse(hinge);
 
-  // 6. Assembly with clearance
-  let complete = strap.fuse(head);
-
-  try {
-    const gap = lever.offset(clearance * 0.7);
-    complete = complete.cut(gap);
-  } catch (e) {
-    // continue if offset fails
-  }
-
-  complete = complete.fuse(lever);
-  return complete;
+  return strap.fuse(head).fuse(lever);
 }
