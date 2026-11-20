@@ -1,6 +1,6 @@
 import opencascade from "replicad-opencascadejs/src/replicad_single.js";
 import opencascadeWasm from "replicad-opencascadejs/src/replicad_single.wasm?url";
-import { setOC, exportSTL } from "replicad";
+import { setOC } from "replicad";
 import { expose } from "comlink";
 import { makeCableTie } from "./cableTie.js";
 
@@ -12,7 +12,6 @@ async function init() {
     locateFile: () => opencascadeWasm,
   });
   setOC(OC);
-  // Make replicad available inside the model
   self.replicad = await import("replicad");
   loaded = true;
 }
