@@ -16,23 +16,32 @@ export function makeCableTie({
   const tipLength = 14;
   const leadIn = 8;
   const gapBeforeHead = 4;
+  const rootLength = 5;
 
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
     .translate([strapLength / 2, 0, strapThickness / 2]);
 
-  // Pointed free end. Same thickness as the strap.
   const tip = draw([0, strapWidth / 2])
     .line(0, -strapWidth)
     .line(-tipLength, strapWidth / 2)
     .close()
     .sketchOnPlane("XY")
-    .extrude(strapThickness);
+    .extrude(strapThickness)
     .translate([0, 0, strapThickness / 2]);
   strap = strap.fuse(tip);
 
+  // Thicker neck: last 8 mm of strap, plus 5 mm buried inside the head.
+  const neck = makeBaseBox(8 + rootLength, strapWidth + 2.2, strapThickness + 1.4)
+    .translate([
+      strapLength - 8 + (8 + rootLength) / 2,
+      0,
+      strapThickness / 2,
+    ]);
+  strap = strap.fuse(neck);
+
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
     const teethStart = leadIn;
-    const teethEnd = Math.max(leadIn, strapLength - gapBeforeHead);
+    const teethEnd = Math.max(leadIn, strapLength - gapBeforeHead - 8);
     const toothLen = Math.min(toothPitch * 0.85, Math.max(0.45, toothPitch * 0.7));
     const toothWidth = Math.max(1.2, strapWidth - 0.6);
     const count = Math.floor((teethEnd - teethStart) / toothPitch);
@@ -58,21 +67,24 @@ export function makeCableTie({
     strapThickness / 2,
   ]);
 
+  // Slot only in the front of the head. The back stays solid around the root.
+  const slotDepth = Math.max(4, headLength - rootLength);
   const slotW = strapWidth + clearance * 2;
   const slotH = strapThickness + toothDepth + clearance * 2 + 0.3;
-  const slot = makeBaseBox(headLength + 0.4, slotW, slotH).translate([
-    headX + headLength / 2,
+  const slot = makeBaseBox(slotDepth, slotW, slotH).translate([
+    headX + rootLength + slotDepth / 2,
     0,
     strapThickness / 2 + 0.1,
   ]);
   head = head.cut(slot);
 
-  const leverX = headX + 2.2;
-  let lever = makeBaseBox(6.2, Math.max(1, strapWidth - 0.5), 1.3).translate([
-    leverX + 3.1,
-    0,
-    strapThickness + toothDepth + clearance + 0.7,
-  ]);
+  const leverX = headX + rootLength + 1.2;
+  let lever = makeBaseBox(Math.max(4, slotDepth - 2.4), Math.max(1, strapWidth - 0.5), 1.3)
+    .translate([
+      leverX + Math.max(4, slotDepth - 2.4) / 2,
+      0,
+      strapThickness + toothDepth + clearance + 0.7,
+    ]);
 
   const lockTooth = makeBaseBox(
     1.5,
