@@ -18,6 +18,16 @@ export function makeCableTie({
 
   const gapBeforeHead = 4;
 
+  // The strap joins the head through a floor. The passage sits above that
+  // floor, so the root no longer fills the hole the free end has to enter.
+  const floor = strapThickness;
+  const passageH = strapThickness + toothDepth + clearance * 2 + 0.5;
+  const roof = Math.max(1.8, headHeight - floor - passageH);
+  const totalH = floor + passageH + roof;
+
+  const slotW = strapWidth + clearance * 2;
+  const headW = Math.max(headWidth, slotW + 2.8);
+
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
     .translate([strapLength / 2, 0, strapThickness / 2]);
 
@@ -30,14 +40,15 @@ export function makeCableTie({
     .translate([0, 0, strapThickness / 2]);
   strap = strap.fuse(tip);
 
-  // Collar outside the slot: wider and thicker, but the slot still cuts through it.
-  const collar = makeBaseBox(collarLength, strapWidth + 3.2, strapThickness + 2.2)
-    .translate([strapLength - 4, 0, strapThickness / 2]);
+  // Wider neck on the strap only. It stops at the head face and stays below the passage.
+  const collarW = Math.min(headW, strapWidth + 3.2);
+  const collar = makeBaseBox(collarLength, collarW, strapThickness)
+    .translate([strapLength - collarLength / 2, 0, strapThickness / 2]);
   strap = strap.fuse(collar);
 
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
     const teethStart = leadIn;
-    const teethEnd = Math.max(leadIn, strapLength - gapBeforeHead - 8);
+    const teethEnd = Math.max(leadIn, strapLength - collarLength - gapBeforeHead);
     const toothLen = Math.min(toothPitch * 0.85, Math.max(0.45, toothPitch * 0.7));
     const toothWidth = Math.max(1.2, strapWidth - 0.6);
     const count = Math.floor((teethEnd - teethStart) / toothPitch);
@@ -57,42 +68,64 @@ export function makeCableTie({
   }
 
   const headX = strapLength;
-  let head = makeBaseBox(headLength, headWidth, headHeight).translate([
+  // Bury the strap in the head floor so the two solids overlap. A face-only
+  // join leaves a gap, and this root stays under the passage.
+  const rootEmbed = Math.min(6, Math.max(2.5, headLength * 0.4));
+  const root = makeBaseBox(rootEmbed + 0.4, strapWidth, floor).translate([
+    headX + rootEmbed / 2 - 0.2,
+    0,
+    floor / 2,
+  ]);
+  strap = strap.fuse(root);
+
+  const head = makeBaseBox(headLength, headW, totalH).translate([
     headX + headLength / 2,
     0,
-    strapThickness / 2,
+    totalH / 2,
   ]);
 
-  // Open on both ends. Nothing is left inside the passage.
-  const slotW = strapWidth + clearance * 2;
-  const slotH = strapThickness + toothDepth + clearance * 2 + 0.3;
-  const slot = makeBaseBox(headLength + 12, slotW, slotH).translate([
-    headX + headLength / 2 - 4,
+  // Past both faces, starting at the top of the floor, so the tunnel is open
+  // and the buried root is left intact.
+  const slot = makeBaseBox(headLength + 2, slotW, passageH).translate([
+    headX + headLength / 2,
     0,
-    strapThickness / 2 + 0.1,
+    floor + passageH / 2,
   ]);
-  head = head.cut(slot);
 
-  const leverX = headX + 2.2;
-  let lever = makeBaseBox(6.2, Math.max(1, strapWidth - 0.5), 1.3).translate([
-    leverX + 3.1,
+  const body = strap.fuse(head).cut(slot);
+
+  const gapUnderRoof = Math.max(0.35, clearance);
+  const pawlT = Math.max(0.55, Math.min(1.2, passageH - gapUnderRoof - 0.5));
+  const pawlW = Math.max(0.8, slotW - clearance * 2 - 0.4);
+  const hingeLen = 1.4;
+  const pawlLen = Math.max(3.2, Math.min(7, headLength - hingeLen - 2.2));
+
+  const slotTop = floor + passageH;
+  const outerX = headX + headLength - 0.45;
+  const hingeX = outerX - hingeLen / 2;
+  const pawlBottom = slotTop - gapUnderRoof - pawlT;
+  const pawlX = outerX - hingeLen + 0.45 - pawlLen / 2;
+
+  const hingeH = gapUnderRoof + pawlT * 0.45 + 0.7;
+  const hinge = makeBaseBox(hingeLen, pawlW * 0.72, hingeH).translate([
+    hingeX,
     0,
-    strapThickness + toothDepth + clearance + 0.7,
+    slotTop + 0.55 - hingeH / 2,
   ]);
 
-  const lockTooth = makeBaseBox(
-    1.5,
-    Math.max(0.8, strapWidth - 1.1),
-    toothDepth + 0.35
-  ).translate([leverX + 1.1, 0, strapThickness + clearance]);
-  lever = lever.fuse(lockTooth);
-
-  const hinge = makeBaseBox(1.1, Math.max(0.8, strapWidth - 0.7), 0.4).translate([
-    headX + headLength - 1.8,
+  const pawl = makeBaseBox(pawlLen, pawlW, pawlT).translate([
+    pawlX,
     0,
-    strapThickness + toothDepth + clearance + 0.85,
+    pawlBottom + pawlT / 2,
   ]);
-  lever = lever.fuse(hinge);
 
-  return strap.fuse(head).fuse(lever);
+  const toothTop = pawlBottom + 0.25;
+  const toothBottom = Math.max(floor + 0.35, Math.min(floor + strapThickness * 0.5, toothTop - 0.45));
+  const lockTooth = makeBaseBox(1.35, Math.max(0.6, pawlW - 0.35), toothTop - toothBottom).translate([
+    pawlX - pawlLen / 2 + 0.95,
+    0,
+    (toothTop + toothBottom) / 2,
+  ]);
+
+  return body.fuse(hinge).fuse(pawl).fuse(lockTooth);
 }
