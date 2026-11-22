@@ -28,22 +28,22 @@ export function makeCableTie({
   const slotW = strapWidth + clearance * 2;
   const headW = Math.max(headWidth, slotW + 2.8);
 
+  // makeBaseBox is centered in X/Y and sits on z = 0. Pass the bottom, not the center.
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
-    .translate([strapLength / 2, 0, strapThickness / 2]);
+    .translate([strapLength / 2, 0, 0]);
 
   const tip = draw([0, strapWidth / 2])
     .line(0, -strapWidth)
     .line(-tipLength, strapWidth / 2)
     .close()
     .sketchOnPlane("XY")
-    .extrude(strapThickness)
-    .translate([0, 0, strapThickness / 2]);
+    .extrude(strapThickness);
   strap = strap.fuse(tip);
 
   // Wider neck on the strap only. It stops at the head face and stays below the passage.
   const collarW = Math.min(headW, strapWidth + 3.2);
   const collar = makeBaseBox(collarLength, collarW, strapThickness)
-    .translate([strapLength - collarLength / 2, 0, strapThickness / 2]);
+    .translate([strapLength - collarLength / 2, 0, 0]);
   strap = strap.fuse(collar);
 
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
@@ -60,7 +60,7 @@ export function makeCableTie({
       const tooth = makeBaseBox(toothLen, toothWidth, toothDepth).translate([
         x + toothLen / 2,
         0,
-        strapThickness + toothDepth / 2,
+        strapThickness,
       ]);
 
       strap = strap.fuse(tooth);
@@ -74,14 +74,14 @@ export function makeCableTie({
   const root = makeBaseBox(rootEmbed + 0.4, strapWidth, floor).translate([
     headX + rootEmbed / 2 - 0.2,
     0,
-    floor / 2,
+    0,
   ]);
   strap = strap.fuse(root);
 
   const head = makeBaseBox(headLength, headW, totalH).translate([
     headX + headLength / 2,
     0,
-    totalH / 2,
+    0,
   ]);
 
   // Past both faces, starting at the top of the floor, so the tunnel is open
@@ -89,7 +89,7 @@ export function makeCableTie({
   const slot = makeBaseBox(headLength + 2, slotW, passageH).translate([
     headX + headLength / 2,
     0,
-    floor + passageH / 2,
+    floor,
   ]);
 
   const body = strap.fuse(head).cut(slot);
@@ -106,17 +106,18 @@ export function makeCableTie({
   const pawlBottom = slotTop - gapUnderRoof - pawlT;
   const pawlX = outerX - hingeLen + 0.45 - pawlLen / 2;
 
-  const hingeH = gapUnderRoof + pawlT * 0.45 + 0.7;
+  const hingeBottom = pawlBottom + pawlT - 0.35;
+  const hingeH = slotTop + 0.6 - hingeBottom;
   const hinge = makeBaseBox(hingeLen, pawlW * 0.72, hingeH).translate([
     hingeX,
     0,
-    slotTop + 0.55 - hingeH / 2,
+    hingeBottom,
   ]);
 
   const pawl = makeBaseBox(pawlLen, pawlW, pawlT).translate([
     pawlX,
     0,
-    pawlBottom + pawlT / 2,
+    pawlBottom,
   ]);
 
   const toothTop = pawlBottom + 0.25;
@@ -124,7 +125,7 @@ export function makeCableTie({
   const lockTooth = makeBaseBox(1.35, Math.max(0.6, pawlW - 0.35), toothTop - toothBottom).translate([
     pawlX - pawlLen / 2 + 0.95,
     0,
-    (toothTop + toothBottom) / 2,
+    toothBottom,
   ]);
 
   return body.fuse(hinge).fuse(pawl).fuse(lockTooth);
