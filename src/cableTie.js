@@ -27,6 +27,7 @@ export function makeCableTie({
     .close()
     .sketchOnPlane("XY")
     .extrude(strapThickness);
+    .translate([0, 0, strapThickness / 2]);
   strap = strap.fuse(tip);
 
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
