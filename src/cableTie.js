@@ -20,12 +20,18 @@ export function makeCableTie({
 
   // The strap joins the head through a floor. The passage sits above that
   // floor, so the root no longer fills the hole the free end has to enter.
+  // The clear opening is wider and taller than the strap plus its teeth.
   const floor = strapThickness;
-  const passageH = strapThickness + toothDepth + clearance * 2 + 0.5;
-  const roof = Math.max(1.8, headHeight - floor - passageH);
+  const sideGap = Math.max(0.6, clearance + 0.35);
+  const passGap = Math.max(0.9, clearance * 2 + 0.5);
+  const openH = strapThickness + toothDepth + passGap;
+  const pawlT = 1.0;
+  const gapUnderRoof = Math.max(0.45, clearance);
+  const passageH = openH + pawlT + gapUnderRoof;
+  const roof = Math.max(1.6, headHeight - floor - passageH);
   const totalH = floor + passageH + roof;
 
-  const slotW = strapWidth + clearance * 2;
+  const slotW = strapWidth + sideGap * 2;
   const headW = Math.max(headWidth, slotW + 2.8);
 
   // makeBaseBox is centered in X/Y and sits on z = 0. Pass the bottom, not the center.
@@ -94,16 +100,15 @@ export function makeCableTie({
 
   const body = strap.fuse(head).cut(slot);
 
-  const gapUnderRoof = Math.max(0.35, clearance);
-  const pawlT = Math.max(0.55, Math.min(1.2, passageH - gapUnderRoof - 0.5));
-  const pawlW = Math.max(0.8, slotW - clearance * 2 - 0.4);
+  const pawlW = Math.max(0.8, slotW - sideGap * 2 - 0.3);
   const hingeLen = 1.4;
   const pawlLen = Math.max(3.2, Math.min(7, headLength - hingeLen - 2.2));
 
   const slotTop = floor + passageH;
   const outerX = headX + headLength - 0.45;
   const hingeX = outerX - hingeLen / 2;
-  const pawlBottom = slotTop - gapUnderRoof - pawlT;
+  // Pawl sits above the clear opening. The tooth only nicks the spare gap.
+  const pawlBottom = floor + openH;
   const pawlX = outerX - hingeLen + 0.45 - pawlLen / 2;
 
   const hingeBottom = pawlBottom + pawlT - 0.35;
@@ -120,8 +125,8 @@ export function makeCableTie({
     pawlBottom,
   ]);
 
-  const toothTop = pawlBottom + 0.25;
-  const toothBottom = Math.max(floor + 0.35, Math.min(floor + strapThickness * 0.5, toothTop - 0.45));
+  const toothTop = pawlBottom + 0.3;
+  const toothBottom = pawlBottom - Math.min(0.25, passGap * 0.25);
   const lockTooth = makeBaseBox(1.35, Math.max(0.6, pawlW - 0.35), toothTop - toothBottom).translate([
     pawlX - pawlLen / 2 + 0.95,
     0,
