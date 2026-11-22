@@ -35,16 +35,13 @@ export function makeCableTie({
       const x = teethStart + i * toothPitch;
       if (x + toothLen > teethEnd) break;
 
-      const tooth = draw()
-        .hLine(toothLen)
-        .line(-toothLen * 0.28, toothDepth)
-        .line(-toothLen * 0.72, -toothDepth)
-        .close()
-        .sketchOnPlane("XZ")
-        .extrude(toothWidth)
-        .translate([x, -toothWidth / 2, strapThickness]);
+const tooth = makeBaseBox(toothLen, toothWidth, toothDepth).translate([
+  x + toothLen / 2,
+  0,
+  strapThickness + toothDepth / 2,
+]);
 
-      strap = strap.fuse(tooth);
+strap = strap.fuse(tooth);
     }
   }
 
