@@ -58,6 +58,9 @@ const defaultParams = {
   toothDepth: 0.6,
   clearance: 0.25,
   showTeeth: true,
+  tipLength: 14,
+  leadIn: 8,
+  collarLength: 10,
 };
 
 function getParams() {
@@ -73,6 +76,9 @@ function getParams() {
     toothDepth: +data.get("toothDepth"),
     clearance: +data.get("clearance"),
     showTeeth: data.get("showTeeth") === "on",
+    tipLength: +data.get("tipLength"),
+    leadIn: +data.get("leadIn"),
+    collarLength: +data.get("collarLength"),
   };
 }
 

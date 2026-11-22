@@ -10,11 +10,12 @@ export function makeCableTie({
   toothDepth = 0.6,
   clearance = 0.25,
   showTeeth = true,
+  tipLength = 14,
+  leadIn = 8,
+  collarLength = 10,
 } = {}) {
   const { draw, makeBaseBox } = self.replicad;
 
-  const tipLength = 14;
-  const leadIn = 8;
   const gapBeforeHead = 4;
 
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
@@ -30,7 +31,7 @@ export function makeCableTie({
   strap = strap.fuse(tip);
 
   // Collar outside the slot: wider and thicker, but the slot still cuts through it.
-  const collar = makeBaseBox(10, strapWidth + 3.2, strapThickness + 2.2)
+  const collar = makeBaseBox(collarLength, strapWidth + 3.2, strapThickness + 2.2)
     .translate([strapLength - 4, 0, strapThickness / 2]);
   strap = strap.fuse(collar);
 
