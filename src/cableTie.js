@@ -16,7 +16,6 @@ export function makeCableTie({
   const tipLength = 14;
   const leadIn = 8;
   const gapBeforeHead = 4;
-  const rootLength = 5;
 
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
     .translate([strapLength / 2, 0, strapThickness / 2]);
@@ -30,14 +29,10 @@ export function makeCableTie({
     .translate([0, 0, strapThickness / 2]);
   strap = strap.fuse(tip);
 
-  // Thicker neck: last 8 mm of strap, plus 5 mm buried inside the head.
-  const neck = makeBaseBox(8 + rootLength, strapWidth + 2.2, strapThickness + 1.4)
-    .translate([
-      strapLength - 8 + (8 + rootLength) / 2,
-      0,
-      strapThickness / 2,
-    ]);
-  strap = strap.fuse(neck);
+  // Collar outside the slot: wider and thicker, but the slot still cuts through it.
+  const collar = makeBaseBox(10, strapWidth + 3.2, strapThickness + 2.2)
+    .translate([strapLength - 4, 0, strapThickness / 2]);
+  strap = strap.fuse(collar);
 
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
     const teethStart = leadIn;
@@ -67,24 +62,22 @@ export function makeCableTie({
     strapThickness / 2,
   ]);
 
-  // Slot only in the front of the head. The back stays solid around the root.
-  const slotDepth = Math.max(4, headLength - rootLength);
+  // Open on both ends. Nothing is left inside the passage.
   const slotW = strapWidth + clearance * 2;
   const slotH = strapThickness + toothDepth + clearance * 2 + 0.3;
-  const slot = makeBaseBox(slotDepth, slotW, slotH).translate([
-    headX + rootLength + slotDepth / 2,
+  const slot = makeBaseBox(headLength + 12, slotW, slotH).translate([
+    headX + headLength / 2 - 4,
     0,
     strapThickness / 2 + 0.1,
   ]);
   head = head.cut(slot);
 
-  const leverX = headX + rootLength + 1.2;
-  let lever = makeBaseBox(Math.max(4, slotDepth - 2.4), Math.max(1, strapWidth - 0.5), 1.3)
-    .translate([
-      leverX + Math.max(4, slotDepth - 2.4) / 2,
-      0,
-      strapThickness + toothDepth + clearance + 0.7,
-    ]);
+  const leverX = headX + 2.2;
+  let lever = makeBaseBox(6.2, Math.max(1, strapWidth - 0.5), 1.3).translate([
+    leverX + 3.1,
+    0,
+    strapThickness + toothDepth + clearance + 0.7,
+  ]);
 
   const lockTooth = makeBaseBox(
     1.5,
