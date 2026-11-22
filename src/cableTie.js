@@ -13,16 +13,21 @@ export function makeCableTie({
 } = {}) {
   const { draw, makeBaseBox } = self.replicad;
 
-  const tabLength = 12;
+  const tipLength = 14;
   const leadIn = 8;
   const gapBeforeHead = 4;
 
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
     .translate([strapLength / 2, 0, strapThickness / 2]);
 
-  const tab = makeBaseBox(tabLength, strapWidth + 1.6, strapThickness)
-    .translate([-tabLength / 2, 0, strapThickness / 2]);
-  strap = strap.fuse(tab);
+  // Pointed free end. Same thickness as the strap.
+  const tip = draw([0, strapWidth / 2])
+    .line(0, -strapWidth)
+    .line(-tipLength, strapWidth / 2)
+    .close()
+    .sketchOnPlane("XY")
+    .extrude(strapThickness);
+  strap = strap.fuse(tip);
 
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
     const teethStart = leadIn;
@@ -35,13 +40,13 @@ export function makeCableTie({
       const x = teethStart + i * toothPitch;
       if (x + toothLen > teethEnd) break;
 
-const tooth = makeBaseBox(toothLen, toothWidth, toothDepth).translate([
-  x + toothLen / 2,
-  0,
-  strapThickness + toothDepth / 2,
-]);
+      const tooth = makeBaseBox(toothLen, toothWidth, toothDepth).translate([
+        x + toothLen / 2,
+        0,
+        strapThickness + toothDepth / 2,
+      ]);
 
-strap = strap.fuse(tooth);
+      strap = strap.fuse(tooth);
     }
   }
 
