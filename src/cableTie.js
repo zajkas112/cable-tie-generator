@@ -17,7 +17,6 @@ export function makeCableTie({
   const leadIn = 8;
   const gapBeforeHead = 4;
 
-  // Pánt: x = 0 … strapLength. A fej ezután kezdődik.
   let strap = makeBaseBox(strapLength, strapWidth, strapThickness)
     .translate([strapLength / 2, 0, strapThickness / 2]);
 
@@ -27,20 +26,21 @@ export function makeCableTie({
 
   if (showTeeth && toothPitch > 0.5 && toothDepth > 0.15) {
     const teethStart = leadIn;
-    const teethEnd = strapLength - gapBeforeHead;
-    const toothLen = Math.max(0.45, toothPitch * 0.42);
-    const toothWidth = Math.max(1.2, strapWidth - 0.8);
+    const teethEnd = Math.max(leadIn, strapLength - gapBeforeHead);
+    const toothLen = Math.min(toothPitch * 0.85, Math.max(0.45, toothPitch * 0.7));
+    const toothWidth = Math.max(1.2, strapWidth - 0.6);
     const count = Math.floor((teethEnd - teethStart) / toothPitch);
 
     for (let i = 0; i < count; i++) {
       const x = teethStart + i * toothPitch;
       if (x + toothLen > teethEnd) break;
 
-      const tooth = draw([0, 0])
-        .lineTo(toothLen, 0)
-        .lineTo(toothLen * 0.7, toothDepth)
+      const tooth = draw()
+        .hLine(toothLen)
+        .line(-toothLen * 0.28, toothDepth)
+        .line(-toothLen * 0.72, -toothDepth)
         .close()
-        .sketchOnPlane("XY")
+        .sketchOnPlane("XZ")
         .extrude(toothWidth)
         .translate([x, -toothWidth / 2, strapThickness]);
 
@@ -65,20 +65,20 @@ export function makeCableTie({
   head = head.cut(slot);
 
   const leverX = headX + 2.2;
-  let lever = makeBaseBox(6.2, strapWidth - 0.5, 1.3).translate([
+  let lever = makeBaseBox(6.2, Math.max(1, strapWidth - 0.5), 1.3).translate([
     leverX + 3.1,
     0,
     strapThickness + toothDepth + clearance + 0.7,
   ]);
 
-  const lockTooth = makeBaseBox(1.5, strapWidth - 1.1, toothDepth + 0.35).translate([
-    leverX + 1.1,
-    0,
-    strapThickness + clearance,
-  ]);
+  const lockTooth = makeBaseBox(
+    1.5,
+    Math.max(0.8, strapWidth - 1.1),
+    toothDepth + 0.35
+  ).translate([leverX + 1.1, 0, strapThickness + clearance]);
   lever = lever.fuse(lockTooth);
 
-  const hinge = makeBaseBox(1.1, strapWidth - 0.7, 0.4).translate([
+  const hinge = makeBaseBox(1.1, Math.max(0.8, strapWidth - 0.7), 0.4).translate([
     headX + headLength - 1.8,
     0,
     strapThickness + toothDepth + clearance + 0.85,
